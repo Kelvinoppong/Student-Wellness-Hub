@@ -61,8 +61,8 @@ export const WeatherWellness: React.FC = () => {
           setLoading(false);
         }
       },
-      (err) => {
-        setError('Please enable location services to get weather data.');
+      (err: GeolocationPositionError) => {
+        setError(`Location error: ${err.message}`);
         setLoading(false);
       }
     );

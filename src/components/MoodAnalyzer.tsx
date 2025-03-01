@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import { Mood as MoodIcon, EmojiEmotions, SentimentSatisfied } from '@mui/icons-material';
 import { analyzeMood } from '../services/openai';
+import { logMood } from '../services/userActivity';
 import { useAuthContext } from '../contexts/AuthContext';
 
 interface MoodAnalysisResult {
@@ -33,7 +34,7 @@ export const MoodAnalyzer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || !user) return;
 
     setLoading(true);
     setError(null);
@@ -41,6 +42,12 @@ export const MoodAnalyzer: React.FC = () => {
     try {
       const analysis = await analyzeMood(input);
       setResult(analysis);
+      // Log the mood for the authenticated user
+      await logMood(user.uid, {
+        mood: analysis.mood,
+        intensity: analysis.intensity,
+        activities: analysis.suggestions
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
