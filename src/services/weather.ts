@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-interface WeatherData {
+const OPENWEATHER_API_BASE_URL = 'https://api.openweathermap.org/data/2.5';
+const OPENWEATHER_API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+
+export interface WeatherData {
   temperature: number;
   condition: string;
   humidity: number;
@@ -9,22 +12,20 @@ interface WeatherData {
   cityName: string;
 }
 
-interface WellnessSuggestion {
+export interface WellnessSuggestion {
   activity: string;
   description: string;
   indoor: boolean;
 }
 
-const OPENWEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
-
 export const getWeatherData = async (lat: number, lon: number): Promise<WeatherData> => {
   try {
-    const response = await axios.get(OPENWEATHER_API_URL, {
+    const response = await axios.get(`${OPENWEATHER_API_BASE_URL}/weather`, {
       params: {
         lat,
         lon,
-        appid: process.env.REACT_APP_OPENWEATHER_API_KEY,
-        units: 'metric', // Use Celsius
+        appid: OPENWEATHER_API_KEY,
+        units: 'metric',
       },
     });
 
@@ -36,68 +37,66 @@ export const getWeatherData = async (lat: number, lon: number): Promise<WeatherD
       icon: response.data.weather[0].icon,
       cityName: response.data.name,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching weather data:', error);
-    throw new Error('Failed to fetch weather data. Please try again.');
+    throw new Error('Failed to fetch weather data');
   }
 };
 
-export const getWellnessSuggestions = (weatherData: WeatherData): WellnessSuggestion[] => {
-  const { temperature, condition } = weatherData;
+export const getWellnessSuggestions = (weather: WeatherData): WellnessSuggestion[] => {
   const suggestions: WellnessSuggestion[] = [];
 
   // Temperature-based suggestions
-  if (temperature < 10) {
+  if (weather.temperature < 10) {
     suggestions.push({
-      activity: 'Indoor Yoga',
-      description: 'Stay warm with some gentle indoor yoga exercises',
+      activity: 'Indoor Exercise',
+      description: 'Stay warm with indoor yoga or stretching.',
       indoor: true,
     });
-  } else if (temperature > 25) {
+  } else if (weather.temperature > 25) {
     suggestions.push({
       activity: 'Stay Hydrated',
-      description: 'Remember to drink plenty of water and avoid prolonged sun exposure',
+      description: 'Remember to drink plenty of water and stay in shade.',
       indoor: true,
+    });
+  } else {
+    suggestions.push({
+      activity: 'Outdoor Walk',
+      description: 'Perfect temperature for a refreshing walk.',
+      indoor: false,
     });
   }
 
   // Weather condition-based suggestions
-  switch (condition.toLowerCase()) {
+  switch (weather.condition.toLowerCase()) {
     case 'clear':
       suggestions.push({
         activity: 'Outdoor Meditation',
-        description: 'Perfect weather for outdoor mindfulness practice',
+        description: 'Take advantage of the clear weather with outdoor mindfulness.',
         indoor: false,
       });
       break;
     case 'rain':
       suggestions.push({
-        activity: 'Indoor Reading',
-        description: 'Cozy up with a book and enjoy the rain sounds',
+        activity: 'Reading Session',
+        description: 'Perfect weather to cozy up with a good book.',
         indoor: true,
       });
       break;
     case 'clouds':
       suggestions.push({
         activity: 'Light Exercise',
-        description: 'Good conditions for a brisk walk or light outdoor activity',
+        description: 'Good conditions for light outdoor exercise.',
         indoor: false,
       });
       break;
     default:
       suggestions.push({
-        activity: 'Stretching',
-        description: 'Do some simple stretching exercises to stay active',
+        activity: 'Mindfulness Break',
+        description: 'Take a moment for mindfulness and deep breathing.',
         indoor: true,
       });
   }
-
-  // Add a general wellness suggestion
-  suggestions.push({
-    activity: 'Deep Breathing',
-    description: 'Take a moment for deep breathing exercises',
-    indoor: true,
-  });
 
   return suggestions;
 }; 

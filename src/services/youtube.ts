@@ -1,58 +1,77 @@
 import axios from 'axios';
 
-interface YouTubeVideo {
+const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3';
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000; // 1 second
+
+export interface YouTubeVideo {
   id: string;
   title: string;
+  description: string;
   thumbnail: string;
-  duration: string;
   channelTitle: string;
+  publishedAt: string;
+  videoUrl: string;
 }
 
-const YOUTUBE_API_URL = 'https://www.googleapis.com/youtube/v3';
-const MAX_DURATION = 'PT5M'; // 5 minutes in ISO 8601 duration format
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const fetchWithRetry = async (url: string, config: any, retries = MAX_RETRIES): Promise<any> => {
+  try {
+    return await axios.get(url, config);
+  } catch (error: any) {
+    if (retries > 0 && error.response?.status === 403) {
+      await delay(RETRY_DELAY);
+      return fetchWithRetry(url, config, retries - 1);
+    }
+    throw error;
+  }
+};
 
 export const fetchStudyBreakVideos = async (
-  category: 'yoga' | 'meditation' | 'stretching' = 'yoga',
-  maxResults: number = 6
+  category: string = 'study break meditation',
+  maxResults: number = 10
 ): Promise<YouTubeVideo[]> => {
   try {
-    // Search for videos
-    const searchResponse = await axios.get(`${YOUTUBE_API_URL}/search`, {
-      params: {
-        part: 'snippet',
-        maxResults,
-        q: `5 minute ${category} break`,
-        type: 'video',
-        videoDuration: 'short', // Only short videos
-        key: process.env.REACT_APP_YOUTUBE_API_KEY,
-      },
-    });
+    if (!YOUTUBE_API_KEY) {
+      throw new Error('YouTube API key is not configured');
+    }
 
-    // Get video details including duration
-    const videoIds = searchResponse.data.items.map((item: any) => item.id.videoId).join(',');
-    const videosResponse = await axios.get(`${YOUTUBE_API_URL}/videos`, {
-      params: {
-        part: 'contentDetails,snippet',
-        id: videoIds,
-        key: process.env.REACT_APP_YOUTUBE_API_KEY,
-      },
-    });
+    const response = await fetchWithRetry(
+      `${YOUTUBE_API_BASE_URL}/search`,
+      {
+        params: {
+          part: 'snippet',
+          q: category,
+          type: 'video',
+          maxResults,
+          key: YOUTUBE_API_KEY,
+          videoDuration: 'short',
+          videoEmbeddable: true,
+          safeSearch: 'strict',
+        },
+      }
+    );
 
-    // Filter and format videos
-    return videosResponse.data.items
-      .filter((video: any) => {
-        const duration = video.contentDetails.duration;
-        return duration <= MAX_DURATION;
-      })
-      .map((video: any) => ({
-        id: video.id,
-        title: video.snippet.title,
-        thumbnail: video.snippet.thumbnails.medium.url,
-        duration: video.contentDetails.duration,
-        channelTitle: video.snippet.channelTitle,
-      }));
+    if (!response.data?.items?.length) {
+      return [];
+    }
+
+    return response.data.items.map((item: any) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      description: item.snippet.description,
+      thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+      channelTitle: item.snippet.channelTitle,
+      publishedAt: item.snippet.publishedAt,
+      videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}`,
+    }));
   } catch (error: any) {
     console.error('Error fetching YouTube videos:', error);
-    throw new Error('Failed to fetch study break videos. Please try again.');
+    if (error.response?.status === 403) {
+      throw new Error('YouTube API access denied. Please check your API key configuration.');
+    }
+    throw new Error('Failed to fetch YouTube videos. Please try again later.');
   }
 }; 

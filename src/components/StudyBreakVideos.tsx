@@ -6,34 +6,31 @@ import {
   CardContent,
   CardMedia,
   Typography,
-  Button,
-  Dialog,
-  IconButton,
-  ToggleButtonGroup,
-  ToggleButton,
   CircularProgress,
+  Button,
+  Alert,
+  AlertTitle,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
-import { fetchStudyBreakVideos } from '../services/youtube';
+import { fetchStudyBreakVideos, YouTubeVideo } from '../services/youtube';
+import { useUserActivity } from '../hooks/useUserActivity';
 
-interface Video {
-  id: string;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  channelTitle: string;
-}
+const categories = [
+  { value: 'study break meditation', label: 'Meditation' },
+  { value: 'quick yoga routine', label: 'Yoga' },
+  { value: '5 minute stretching', label: 'Stretching' },
+  { value: 'desk exercises', label: 'Desk Exercises' },
+];
 
 export const StudyBreakVideos: React.FC = () => {
-  const [videos, setVideos] = useState<Video[]>([]);
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [category, setCategory] = useState<'yoga' | 'meditation' | 'stretching'>('yoga');
-
-  useEffect(() => {
-    loadVideos();
-  }, [category]);
+  const [category, setCategory] = useState(categories[0].value);
+  const { addVideoToHistory } = useUserActivity();
 
   const loadVideos = async () => {
     setLoading(true);
@@ -43,118 +40,118 @@ export const StudyBreakVideos: React.FC = () => {
       setVideos(fetchedVideos);
     } catch (err: any) {
       setError(err.message);
+      setVideos([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCategoryChange = (
-    _event: React.MouseEvent<HTMLElement>,
-    newCategory: 'yoga' | 'meditation' | 'stretching'
-  ) => {
-    if (newCategory !== null) {
-      setCategory(newCategory);
+  useEffect(() => {
+    loadVideos();
+  }, [category]);
+
+  const handleVideoClick = async (video: YouTubeVideo) => {
+    try {
+      await addVideoToHistory({
+        videoId: video.id,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        category: category,
+      });
+      window.open(video.videoUrl, '_blank');
+    } catch (err) {
+      console.error('Error logging video history:', err);
     }
   };
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom>
           Study Break Videos
         </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Take a short break with these curated videos to help you relax and recharge.
+        </Typography>
         
-        <ToggleButtonGroup
-          value={category}
-          exclusive
-          onChange={handleCategoryChange}
-          aria-label="video category"
-          sx={{ mb: 2 }}
-        >
-          <ToggleButton value="yoga">Yoga</ToggleButton>
-          <ToggleButton value="meditation">Meditation</ToggleButton>
-          <ToggleButton value="stretching">Stretching</ToggleButton>
-        </ToggleButtonGroup>
+        <FormControl sx={{ minWidth: 200, mb: 3 }}>
+          <InputLabel>Category</InputLabel>
+          <Select
+            value={category}
+            label="Category"
+            onChange={(e) => setCategory(e.target.value)}
+          >
+            {categories.map((cat) => (
+              <MenuItem key={cat.value} value={cat.value}>
+                {cat.label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
 
-        <Button
-          variant="outlined"
-          onClick={() => loadVideos()}
-          sx={{ mb: 2 }}
-        >
-          Refresh Videos
-        </Button>
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 3 }}
+            action={
+              <Button color="inherit" size="small" onClick={loadVideos}>
+                Try Again
+              </Button>
+            }
+          >
+            <AlertTitle>Error</AlertTitle>
+            {error}
+          </Alert>
+        )}
       </Box>
 
-      {loading && (
-        <Box display="flex" justifyContent="center">
+      {loading ? (
+        <Box display="flex" justifyContent="center" p={4}>
           <CircularProgress />
         </Box>
-      )}
-
-      {error && (
-        <Typography color="error" align="center">
-          {error}
-        </Typography>
-      )}
-
-      <Grid container spacing={3}>
-        {videos.map((video) => (
-          <Grid item xs={12} sm={6} md={4} key={video.id}>
-            <Card>
-              <CardMedia
-                component="img"
-                height="140"
-                image={video.thumbnail}
-                alt={video.title}
-                sx={{ cursor: 'pointer' }}
-                onClick={() => setSelectedVideo(video.id)}
-              />
-              <CardContent>
-                <Typography variant="h6" noWrap>
-                  {video.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {video.channelTitle}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      <Dialog
-        fullWidth
-        maxWidth="md"
-        open={!!selectedVideo}
-        onClose={() => setSelectedVideo(null)}
-      >
-        <Box sx={{ position: 'relative' }}>
-          <IconButton
-            sx={{ position: 'absolute', right: 8, top: 8, zIndex: 1 }}
-            onClick={() => setSelectedVideo(null)}
-          >
-            <CloseIcon />
-          </IconButton>
-          {selectedVideo && (
-            <Box sx={{ position: 'relative', paddingTop: '56.25%' }}>
-              <iframe
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
+      ) : (
+        <Grid container spacing={3}>
+          {videos.map((video) => (
+            <Grid item xs={12} sm={6} md={4} key={video.id}>
+              <Card 
+                sx={{ 
+                  height: '100%', 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                    transition: 'transform 0.2s ease-in-out',
+                  },
                 }}
-                src={`https://www.youtube.com/embed/${selectedVideo}?autoplay=1`}
-                title="YouTube video player"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </Box>
+                onClick={() => handleVideoClick(video)}
+              >
+                <CardMedia
+                  component="img"
+                  height="140"
+                  image={video.thumbnail}
+                  alt={video.title}
+                />
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Typography variant="h6" gutterBottom component="div">
+                    {video.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {video.channelTitle}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+          {!loading && videos.length === 0 && !error && (
+            <Grid item xs={12}>
+              <Alert severity="info">
+                No videos found for this category. Try selecting a different category.
+              </Alert>
+            </Grid>
           )}
-        </Box>
-      </Dialog>
+        </Grid>
+      )}
     </Box>
   );
 }; 

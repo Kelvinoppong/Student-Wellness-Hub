@@ -12,6 +12,8 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  Alert,
+  AlertTitle,
 } from '@mui/material';
 import { Mood as MoodIcon, EmojiEmotions, SentimentSatisfied } from '@mui/icons-material';
 import { analyzeMood } from '../services/openai';
@@ -34,7 +36,14 @@ export const MoodAnalyzer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !user) return;
+    if (!input.trim()) {
+      setError('Please enter how you are feeling.');
+      return;
+    }
+    if (!user) {
+      setError('Please sign in to use the mood analyzer.');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -49,7 +58,9 @@ export const MoodAnalyzer: React.FC = () => {
         activities: analysis.suggestions
       });
     } catch (err: any) {
-      setError(err.message);
+      console.error('Mood analysis error:', err);
+      setError(err.message || 'Failed to analyze mood. Please try again.');
+      setResult(null);
     } finally {
       setLoading(false);
     }
@@ -78,6 +89,8 @@ export const MoodAnalyzer: React.FC = () => {
             rows={3}
             variant="outlined"
             sx={{ mb: 2 }}
+            error={!!error && !input.trim()}
+            helperText={!input.trim() && error ? error : ''}
           />
           <Button
             fullWidth
@@ -91,10 +104,11 @@ export const MoodAnalyzer: React.FC = () => {
         </form>
       </Paper>
 
-      {error && (
-        <Typography color="error" sx={{ mt: 2 }}>
+      {error && input.trim() && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          <AlertTitle>Error</AlertTitle>
           {error}
-        </Typography>
+        </Alert>
       )}
 
       {result && (

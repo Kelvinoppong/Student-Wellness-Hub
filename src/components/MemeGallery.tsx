@@ -21,8 +21,6 @@ interface GiphyGif {
   images: {
     fixed_height: {
       url: string;
-      height: string;
-      width: string;
     };
   };
 }

@@ -14,8 +14,15 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Configure Google Auth Provider
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export default app; 

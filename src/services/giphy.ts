@@ -1,43 +1,36 @@
 import axios from 'axios';
 
-interface GiphyGif {
+const GIPHY_API_BASE_URL = 'https://api.giphy.com/v1/gifs';
+const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY;
+
+export interface GiphyGif {
   id: string;
   title: string;
   url: string;
   images: {
+    original: {
+      url: string;
+    };
     fixed_height: {
       url: string;
-      height: string;
-      width: string;
     };
   };
 }
 
-const GIPHY_API_URL = 'https://api.giphy.com/v1/gifs';
-
-export const fetchGifs = async (
-  category: 'relaxing' | 'funny' | 'study' | 'motivation' = 'funny',
-  limit: number = 12
-): Promise<GiphyGif[]> => {
+export const fetchGifs = async (query: string = 'happy', limit: number = 20): Promise<GiphyGif[]> => {
   try {
-    const response = await axios.get(`${GIPHY_API_URL}/search`, {
+    const response = await axios.get(`${GIPHY_API_BASE_URL}/search`, {
       params: {
-        api_key: process.env.REACT_APP_GIPHY_API_KEY,
-        q: `${category} meme`,
+        api_key: GIPHY_API_KEY,
+        q: query,
         limit,
-        rating: 'g', // G-rated content only
-        lang: 'en',
+        rating: 'g',
       },
     });
 
-    return response.data.data.map((gif: any) => ({
-      id: gif.id,
-      title: gif.title,
-      url: gif.url,
-      images: gif.images,
-    }));
-  } catch (error: any) {
+    return response.data.data;
+  } catch (error) {
     console.error('Error fetching GIFs:', error);
-    throw new Error('Failed to fetch GIFs. Please try again.');
+    throw new Error('Failed to fetch GIFs');
   }
 }; 
