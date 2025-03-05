@@ -13,6 +13,10 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
+  Avatar,
+  Tooltip,
+  Divider,
+  Badge,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -22,48 +26,154 @@ import {
   TagFaces,
   WbSunny,
   ExitToApp,
+  Brightness4,
+  Brightness7,
+  Notifications,
+  SelfImprovement,
+  Psychology,
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
+import { ColorModeContext } from '../../contexts/ColorModeContext';
 
 const drawerWidth = 240;
 
 export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const theme = useTheme();
+  const colorMode = React.useContext(ColorModeContext);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
   const { user } = useAuthContext();
 
   const menuItems = [
-    { text: 'Dashboard', icon: <Dashboard />, path: '/' },
-    { text: 'Mood Tracker', icon: <EmojiEmotions />, path: '/mood' },
-    { text: 'Study Breaks', icon: <OndemandVideo />, path: '/videos' },
-    { text: 'Meme Gallery', icon: <TagFaces />, path: '/memes' },
-    { text: 'Weather & Wellness', icon: <WbSunny />, path: '/weather' },
+    { 
+      text: 'Dashboard', 
+      icon: <Dashboard />, 
+      path: '/dashboard',
+      description: 'Overview of your wellness activities'
+    },
+    { 
+      text: 'Mood Tracker', 
+      icon: <EmojiEmotions />, 
+      path: '/mood',
+      description: 'Track and analyze your mood'
+    },
+    { 
+      text: 'Study Breaks', 
+      icon: <OndemandVideo />, 
+      path: '/videos',
+      description: 'Take a break with relaxing videos'
+    },
+    { 
+      text: 'Meme Gallery', 
+      icon: <TagFaces />, 
+      path: '/memes',
+      description: 'Enjoy some humor to brighten your day'
+    },
+    { 
+      text: 'Weather & Wellness', 
+      icon: <WbSunny />, 
+      path: '/weather',
+      description: 'Check weather and get wellness tips'
+    },
+    { 
+      text: 'Mindfulness', 
+      icon: <SelfImprovement />, 
+      path: '/mindfulness',
+      description: 'Guided meditations and mindfulness exercises'
+    },
+    { 
+      text: 'Mental Health Resources', 
+      icon: <Psychology />, 
+      path: '/resources',
+      description: 'Access mental health resources and support'
+    },
   ];
 
   const drawer = (
     <Box>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          Wellness Hub
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        p: 2,
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.primary.contrastText
+      }}>
+        <Avatar 
+          sx={{ 
+            width: 60, 
+            height: 60, 
+            mb: 1,
+            bgcolor: theme.palette.background.paper,
+            color: theme.palette.primary.main,
+            boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+          }}
+        >
+          {user?.displayName?.charAt(0) || 'S'}
+        </Avatar>
+        <Typography variant="h6" noWrap component="div" fontWeight="bold">
+          Student Wellness Hub
         </Typography>
-      </Toolbar>
-      <List>
+        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          Your daily wellness companion
+        </Typography>
+      </Box>
+      <Divider />
+      <List sx={{ p: 1 }}>
         {menuItems.map((item) => (
-          <ListItemButton
-            key={item.text}
-            component={Link}
-            to={item.path}
-            selected={location.pathname === item.path}
-            onClick={() => setMobileOpen(false)}
-          >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItemButton>
+          <Tooltip title={item.description} placement="right" key={item.text}>
+            <ListItemButton
+              component={Link}
+              to={item.path}
+              selected={location.pathname === item.path}
+              onClick={() => setMobileOpen(false)}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                '&.Mui-selected': {
+                  backgroundColor: theme.palette.mode === 'light' 
+                    ? 'rgba(91, 138, 249, 0.12)'
+                    : 'rgba(122, 160, 255, 0.12)',
+                  '&:hover': {
+                    backgroundColor: theme.palette.mode === 'light' 
+                      ? 'rgba(91, 138, 249, 0.18)'
+                      : 'rgba(122, 160, 255, 0.18)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: theme.palette.mode === 'light' 
+                    ? 'rgba(0, 0, 0, 0.04)'
+                    : 'rgba(255, 255, 255, 0.04)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ 
+                color: location.pathname === item.path 
+                  ? theme.palette.primary.main 
+                  : theme.palette.text.secondary 
+              }}>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText 
+                primary={item.text} 
+                primaryTypographyProps={{ 
+                  fontWeight: location.pathname === item.path ? 'medium' : 'normal' 
+                }}
+              />
+            </ListItemButton>
+          </Tooltip>
         ))}
       </List>
+      <Box sx={{ flexGrow: 1 }} />
+      <Divider />
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+        <Typography variant="caption" color="text.secondary" align="center">
+          {new Date().getFullYear()} Student Wellness Hub<br />
+          Take care of your mind and body
+        </Typography>
+      </Box>
     </Box>
   );
 
@@ -91,10 +201,27 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               {menuItems.find((item) => item.path === location.pathname)?.text || 'Student Wellness Hub'}
             </Typography>
           </Box>
-          {user && (
-            <IconButton color="inherit" component={Link} to="/logout">
-              <ExitToApp />
+          
+          <Tooltip title="Notifications">
+            <IconButton color="inherit" sx={{ mr: 1 }}>
+              <Badge badgeContent={3} color="error">
+                <Notifications />
+              </Badge>
             </IconButton>
+          </Tooltip>
+          
+          <Tooltip title={`Switch to ${theme.palette.mode === 'dark' ? 'light' : 'dark'} mode`}>
+            <IconButton color="inherit" onClick={colorMode.toggleColorMode} sx={{ mr: 1 }}>
+              {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness4 />}
+            </IconButton>
+          </Tooltip>
+          
+          {user && (
+            <Tooltip title="Logout">
+              <IconButton color="inherit" component={Link} to="/logout">
+                <ExitToApp />
+              </IconButton>
+            </Tooltip>
           )}
         </Toolbar>
       </AppBar>
@@ -137,10 +264,14 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           mt: '64px',
+          minHeight: 'calc(100vh - 64px)',
+          backgroundColor: theme.palette.mode === 'light' 
+            ? 'rgba(248, 249, 255, 0.5)'
+            : 'rgba(26, 26, 46, 0.5)',
         }}
       >
         {children}
       </Box>
     </Box>
   );
-}; 
+};
