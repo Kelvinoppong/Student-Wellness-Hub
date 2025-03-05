@@ -64,49 +64,49 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       text: 'Dashboard', 
       icon: <Dashboard />, 
       path: '/dashboard',
-      description: 'Overview of your wellness activities'
+      description: 'Your personal wellness overview'
     },
     { 
-      text: 'Book Appointment', 
-      icon: <Schedule />, 
-      path: '/appointments',
-      description: 'Schedule a counseling appointment'
-    },
-    { 
-      text: 'Mood Tracker', 
+      text: 'Mood Check-In', 
       icon: <EmojiEmotions />, 
       path: '/mood',
-      description: 'Track and analyze your mood'
+      description: 'Track your mood and emotional well-being'
     },
     { 
-      text: 'Study Breaks', 
-      icon: <OndemandVideo />, 
-      path: '/videos',
-      description: 'Take a break with relaxing videos'
-    },
-    { 
-      text: 'Meme Gallery', 
-      icon: <TagFaces />, 
-      path: '/memes',
-      description: 'Enjoy some humor to brighten your day'
-    },
-    { 
-      text: 'Weather & Wellness', 
-      icon: <WbSunny />, 
-      path: '/weather',
-      description: 'Check weather and get wellness tips'
+      text: 'Talk to Someone', 
+      icon: <Schedule />, 
+      path: '/appointments',
+      description: 'Schedule a confidential counseling session'
     },
     { 
       text: 'Mindfulness', 
       icon: <SelfImprovement />, 
       path: '/mindfulness',
-      description: 'Guided meditations and mindfulness exercises'
+      description: 'Guided meditation and relaxation exercises'
+    },
+    { 
+      text: 'Positive Break', 
+      icon: <TagFaces />, 
+      path: '/memes',
+      description: 'Take a moment to smile with uplifting content'
+    },
+    { 
+      text: 'Study Break Videos', 
+      icon: <OndemandVideo />, 
+      path: '/videos',
+      description: 'Relaxing videos to help you unwind'
+    },
+    { 
+      text: 'Wellness Tips', 
+      icon: <WbSunny />, 
+      path: '/weather',
+      description: 'Daily wellness tips and weather-based activities'
     },
     { 
       text: 'Mental Health Resources', 
       icon: <Psychology />, 
       path: '/resources',
-      description: 'Access mental health resources and support'
+      description: 'Access helpful mental health information and support'
     },
   ];
 
@@ -117,7 +117,9 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         flexDirection: 'column', 
         alignItems: 'center', 
         p: 2,
-        backgroundColor: theme.palette.primary.main,
+        background: theme.palette.mode === 'light' 
+          ? 'linear-gradient(to bottom right, #5B8AF9, #83A8FF)'
+          : 'linear-gradient(to bottom right, #3F6AD4, #5B8AF9)',
         color: theme.palette.primary.contrastText
       }}>
         <Avatar 
@@ -135,11 +137,16 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
         <Typography variant="h6" noWrap component="div" fontWeight="bold">
           Student Wellness Hub
         </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-          Your daily wellness companion
+        <Typography variant="body2" sx={{ opacity: 0.9, textAlign: 'center', mt: 1 }}>
+          You're not alone. We're here to support you.
         </Typography>
       </Box>
       <Divider />
+      <Box sx={{ p: 2 }}>
+        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, pl: 2 }}>
+          Your Wellness Journey
+        </Typography>
+      </Box>
       <List sx={{ p: 1 }}>
         {menuItems.map((item) => (
           <Tooltip title={item.description} placement="right" key={item.text}>
@@ -151,6 +158,7 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
+                transition: 'all 0.2s ease-in-out',
                 '&.Mui-selected': {
                   backgroundColor: theme.palette.mode === 'light' 
                     ? 'rgba(91, 138, 249, 0.12)'
@@ -159,26 +167,35 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
                     backgroundColor: theme.palette.mode === 'light' 
                       ? 'rgba(91, 138, 249, 0.18)'
                       : 'rgba(122, 160, 255, 0.18)',
+                    transform: 'translateX(4px)',
                   },
                 },
                 '&:hover': {
                   backgroundColor: theme.palette.mode === 'light' 
                     ? 'rgba(0, 0, 0, 0.04)'
                     : 'rgba(255, 255, 255, 0.04)',
+                  transform: 'translateX(4px)',
                 },
               }}
             >
               <ListItemIcon sx={{ 
                 color: location.pathname === item.path 
                   ? theme.palette.primary.main 
-                  : theme.palette.text.secondary 
+                  : theme.palette.text.secondary,
+                transition: 'color 0.2s ease-in-out'
               }}>
                 {item.icon}
               </ListItemIcon>
               <ListItemText 
                 primary={item.text} 
+                secondary={location.pathname === item.path ? item.description : null}
                 primaryTypographyProps={{ 
-                  fontWeight: location.pathname === item.path ? 'medium' : 'normal' 
+                  fontWeight: location.pathname === item.path ? 'medium' : 'normal',
+                  fontSize: '0.95rem'
+                }}
+                secondaryTypographyProps={{
+                  fontSize: '0.75rem',
+                  sx: { opacity: 0.8 }
                 }}
               />
             </ListItemButton>
