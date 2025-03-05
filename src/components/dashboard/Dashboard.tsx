@@ -9,7 +9,6 @@ import {
   Button,
 } from '@mui/material';
 import {
-  Mood,
   OndemandVideo,
   TagFaces,
   WbSunny,
@@ -27,31 +26,18 @@ interface UserStats {
 }
 
 export const Dashboard: React.FC = () => {
-  const { getActivityStats, getUserMoodHistory, loading } = useUserActivity();
+  const { getActivityStats, loading } = useUserActivity();
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [lastMood, setLastMood] = useState<string | null>(null);
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      const [userStats, moodHistory] = await Promise.all([
-        getActivityStats(),
-        getUserMoodHistory(1),
-      ]);
+      const userStats = await getActivityStats();
       setStats(userStats);
-      if (moodHistory.length > 0) {
-        setLastMood(moodHistory[0].mood);
-      }
     };
     loadDashboardData();
-  }, [getActivityStats, getUserMoodHistory]);
+  }, [getActivityStats]);
 
   const quickActions = [
-    {
-      title: 'Track Mood',
-      icon: <Mood fontSize="large" />,
-      path: '/mood',
-      color: '#4CAF50',
-    },
     {
       title: 'Take a Break',
       icon: <OndemandVideo fontSize="large" />,
@@ -158,32 +144,6 @@ export const Dashboard: React.FC = () => {
       <Grid item xs={12} md={4}>
         <WeatherWellness />
       </Grid>
-
-      {/* Last Mood */}
-      {lastMood && (
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                <Mood sx={{ verticalAlign: 'middle', mr: 1 }} />
-                Last Recorded Mood
-              </Typography>
-              <Typography variant="h5" color="primary">
-                {lastMood}
-              </Typography>
-              <Button
-                component={Link}
-                to="/mood"
-                variant="outlined"
-                color="primary"
-                sx={{ mt: 2 }}
-              >
-                Update Mood
-              </Button>
-            </CardContent>
-          </Card>
-        </Grid>
-      )}
     </Grid>
   );
-}; 
+};

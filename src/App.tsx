@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { ThemeProvider, createTheme, Box, CircularProgress, CssBaseline, PaletteMode } from '@mui/material';
+import './App.css';
 import { MainLayout } from './components/layout/MainLayout';
 import { Login } from './components/auth/Login';
 import { Register } from './components/auth/Register';
