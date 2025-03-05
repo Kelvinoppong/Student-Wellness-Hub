@@ -9,6 +9,7 @@ import { MoodAnalyzer } from './components/MoodAnalyzer';
 import { StudyBreakVideos } from './components/StudyBreakVideos';
 import { MemeGallery } from './components/MemeGallery';
 import { WeatherWellness } from './components/WeatherWellness';
+import { AppointmentBooking } from './components/appointments/AppointmentBooking';
 import { useAuthContext, AuthProvider } from './contexts/AuthContext';
 import { ColorModeContext } from './contexts/ColorModeContext';
 
@@ -211,14 +212,15 @@ const App: React.FC = () => {
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/appointments" element={<AppointmentBooking />} />
                 <Route path="/mood" element={<MoodAnalyzer />} />
                 <Route path="/videos" element={<StudyBreakVideos />} />
                 <Route path="/memes" element={<MemeGallery />} />
                 <Route path="/weather" element={<WeatherWellness />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
               </Route>
 
               {/* Default Routes */}
-              <Route path="/" element={<Navigate to="/login" />} />
               <Route path="*" element={<Navigate to="/login" />} />
             </Routes>
           </AuthProvider>

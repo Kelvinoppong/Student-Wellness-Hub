@@ -31,10 +31,12 @@ import {
   Notifications,
   SelfImprovement,
   Psychology,
+  Schedule,
 } from '@mui/icons-material';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from '../../contexts/AuthContext';
 import { ColorModeContext } from '../../contexts/ColorModeContext';
+import { signOutUser } from '../../services/auth';
 
 const drawerWidth = 240;
 
@@ -44,7 +46,18 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
   const colorMode = React.useContext(ColorModeContext);
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuthContext();
+
+  const handleLogout = async () => {
+    try {
+      await signOutUser();
+      // Force a page reload after logout to clear any cached states
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   const menuItems = [
     { 
@@ -52,6 +65,12 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       icon: <Dashboard />, 
       path: '/dashboard',
       description: 'Overview of your wellness activities'
+    },
+    { 
+      text: 'Book Appointment', 
+      icon: <Schedule />, 
+      path: '/appointments',
+      description: 'Schedule a counseling appointment'
     },
     { 
       text: 'Mood Tracker', 
@@ -168,7 +187,22 @@ export const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }
       </List>
       <Box sx={{ flexGrow: 1 }} />
       <Divider />
-      <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'center', flexDirection: 'column', gap: 1 }}>
+        <Tooltip title="Logout">
+          <ListItemButton
+            onClick={handleLogout}
+            sx={{
+              borderRadius: 2,
+              justifyContent: 'center',
+              color: theme.palette.error.main,
+            }}
+          >
+            <ListItemIcon sx={{ color: 'inherit', minWidth: 'auto', mr: 1 }}>
+              <ExitToApp />
+            </ListItemIcon>
+            <ListItemText primary="Logout" />
+          </ListItemButton>
+        </Tooltip>
         <Typography variant="caption" color="text.secondary" align="center">
           {new Date().getFullYear()} Student Wellness Hub<br />
           Take care of your mind and body
